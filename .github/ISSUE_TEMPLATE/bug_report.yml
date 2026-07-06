@@ -1,0 +1,34 @@
+name: Bug report
+description: Something does not behave the way the conformance tests would suggest
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. This is a work in progress, so please include enough detail to reproduce.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened
+      description: What did you do, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: A request against a running server is ideal.
+      render: shell
+      placeholder: |
+        ruby src/server.rb
+        curl http://localhost:3016/blog-postings
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: Ruby version
+      description: Output of `ruby --version`
+      placeholder: "ruby 3.4.0"
+    validations:
+      required: true

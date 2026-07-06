@@ -1,0 +1,17 @@
+name: cms-api-ruby-flatfile
+
+services:
+  app:
+    container_name: cms-api-ruby-flatfile
+    build: .
+    ports:
+      - "3016:3016"
+    volumes:
+      - ./data:/app/data
+    environment:
+      PORT: "3016"
+      DATA_DIR: /app/data
+      ADMIN_USER: "${ADMIN_USER:-}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}"
+      RATE_LIMIT_READ_PER_MINUTE: "${RATE_LIMIT_READ_PER_MINUTE:-600}"
+      RATE_LIMIT_WRITE_PER_MINUTE: "${RATE_LIMIT_WRITE_PER_MINUTE:-60}"
