@@ -20,7 +20,6 @@ This is a work-in-progress project (v0.1.0). The roadmap is deliberately loose, 
 
 ## Considering
 
-- A Rails-based variant of this server
 - Database-backed storage variants
 
 Have a need or an idea? Open an issue. This is built in public and feedback shapes the order.
