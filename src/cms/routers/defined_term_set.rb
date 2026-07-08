@@ -168,7 +168,10 @@ module Cms
               return Cms::Http.json_error(req, Cms::Errors.forbidden(%(Status transition #{current[status]} -> #{body[status]} is not allowed for role "#{role}".), request_path))
             end
           end
+          # update() returns nil when the record vanished between the lookup
+          # above and the write (concurrent delete) -- a 404, same as the lookup.
           updated = MODEL.update(item_id, body)
+          return Cms::Http.json_error(req, Cms::Errors.not_found(MODEL::TYPE_NAME, request_path)) if updated.nil?
           return Cms::Http.json_response(req, 200, Cms::Access.strip_fields(role, updated), {}, MODEL.etag_of(updated))
         end
 
