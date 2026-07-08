@@ -117,7 +117,7 @@ module Cms
           errs = MODEL.validate(body)
           return Cms::Http.json_error(req, Cms::Errors.validation(errs, request_path)) unless errs.empty?
           created = MODEL.create(Cms::Access.apply_create_defaults(ENTITY, body, principal["accountId"]))
-          return Cms::Http.json_response(req, 201, Cms::Access.strip_fields(role, created), { "Location" => "#{BASE}/#{created["id"]}" })
+          return Cms::Http.json_response(req, 201, Cms::Access.strip_fields(role, created), { "Location" => "#{BASE}/#{created["id"]}" }, MODEL.etag_of(created))
         end
         Cms::Http.json_error(req, Cms::Errors.method_not_allowed(["GET", "POST"], request_path))
       end
@@ -136,7 +136,9 @@ module Cms
           if item.nil? || !Cms::Access.visible?(role, ENTITY, item)
             return Cms::Http.json_error(req, Cms::Errors.not_found(MODEL::TYPE_NAME, request_path))
           end
-          return Cms::Http.json_response(req, 200, Cms::Access.strip_fields(role, MODEL.embed_refs(item)))
+          # The ETag names the stored record's version, not the role- and
+          # embedding-shaped body -- it must satisfy a later If-Match.
+          return Cms::Http.json_response(req, 200, Cms::Access.strip_fields(role, MODEL.embed_refs(item)), {}, MODEL.etag_of(item))
         end
 
         if method == "PUT"
@@ -167,7 +169,7 @@ module Cms
             end
           end
           updated = MODEL.update(item_id, body)
-          return Cms::Http.json_response(req, 200, Cms::Access.strip_fields(role, updated))
+          return Cms::Http.json_response(req, 200, Cms::Access.strip_fields(role, updated), {}, MODEL.etag_of(updated))
         end
 
         if method == "DELETE"

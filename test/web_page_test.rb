@@ -185,4 +185,28 @@ class WebPageApiTest < Minitest::Test
     got = T.request_json(@server, "GET", "#{BASE}/#{created["id"]}")["body"]
     assert_equal dangling, got["author"]
   end
+
+  def test_fresh_etag_from_get_satisfies_if_match_on_put_then_delete
+    payload = T.build_payload(@server, ENTITY, partial: true)
+    created = T.request_json(@server, "POST", BASE, payload)["body"]
+
+    got = T.request_json(@server, "GET", "#{BASE}/#{created["id"]}")
+    assert_equal 200, got["status"]
+    etag = got["headers"]["etag"]
+    assert etag
+
+    # The observable ETag names the record version: a conditional GET with it is a 304.
+    not_modified = T.request_json(@server, "GET", "#{BASE}/#{created["id"]}", headers: { "If-None-Match" => etag })
+    assert_equal 304, not_modified["status"]
+
+    # The honest fresh path: PUT with the ETag the GET handed out succeeds.
+    put = T.request_json(@server, "PUT", "#{BASE}/#{created["id"]}", {}, headers: { "If-Match" => etag })
+    assert_equal 200, put["status"], "PUT with fresh If-Match expected 200, got #{put["status"]}: #{put["raw"]}"
+
+    # The PUT response carries the new record version; DELETE with it succeeds.
+    put_etag = put["headers"]["etag"]
+    assert put_etag
+    del = T.request_json(@server, "DELETE", "#{BASE}/#{created["id"]}", headers: { "If-Match" => put_etag })
+    assert_equal 204, del["status"]
+  end
 end

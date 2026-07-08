@@ -161,10 +161,14 @@ module Cms
       Response.new(204, CORS_HEADERS.dup)
     end
 
-    def self.json_response(req, status, data, extra_headers = {})
+    # Single-record responses pass the record's canonical ETag (the stored
+    # record's version, the same value If-Match is checked against). Without one
+    # the ETag falls back to a hash of the response body; lists and errors have
+    # no single record version.
+    def self.json_response(req, status, data, extra_headers = {}, etag = nil)
       return Response.new(204, CORS_HEADERS.dup) if status == 204
       body = JSON.generate(data)
-      etag = generate_etag(body)
+      etag ||= generate_etag(body)
       inm = req.headers["if-none-match"]
       if !inm.nil? && (inm == etag || inm == "*")
         return Response.new(304, CORS_HEADERS.dup)
